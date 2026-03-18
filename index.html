@@ -18,6 +18,7 @@
             padding: 0;
             height: 100%;
             overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
         iframe {
             width: 100%;
@@ -25,15 +26,15 @@
             border: none;
         }
         
-        /* The Install Button Design */
+        /* The Android Install Button */
         #installBtn {
-            display: none; /* Hidden by default so it doesn't show on iOS or already-installed apps */
+            display: none; 
             position: absolute;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             padding: 15px 30px;
-            background-color: #000000; /* Change this to your brand color */
+            background-color: #000000; 
             color: #ffffff;
             border: none;
             border-radius: 25px;
@@ -41,46 +42,92 @@
             font-weight: bold;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             cursor: pointer;
-            z-index: 1000; /* Keeps it sitting on top of the iframe */
+            z-index: 1000; 
+        }
+
+        /* The iOS Prompt Bubble */
+        #iosPrompt {
+            display: none; 
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffffff;
+            color: #333333;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            text-align: center;
+            width: 260px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        /* The little arrow pointing down on the iOS bubble */
+        #iosPrompt::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            margin-left: -10px;
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: #ffffff transparent transparent transparent;
         }
     </style>
 </head>
 <body>
-    <iframe src="https://script.google.com/macros/s/AKfycbwww0lxCNGZu2Ktubb0i6zluhAYDA4ROyjoQbqtiKcOrBcyaU90dmdA3-Nvs96Nvig7/exec"></iframe>
+    <iframe src="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"></iframe>
 
     <button id="installBtn">Install App</button>
 
+    <div id="iosPrompt">
+        Tap the <strong>Share</strong> icon below<br>
+        and select <strong>Add to Home Screen</strong>.
+    </div>
+
     <script>
+        // --- ANDROID INSTALL LOGIC ---
         let deferredPrompt;
         const installBtn = document.getElementById('installBtn');
 
-        // This event only fires on supported devices (mostly Android/Chrome)
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the default mini-infobar from appearing
             e.preventDefault();
-            // Stash the event so it can be triggered later.
             deferredPrompt = e;
-            // Un-hide our custom button
             installBtn.style.display = 'block';
         });
 
         installBtn.addEventListener('click', async () => {
-            // Hide the button once clicked
             installBtn.style.display = 'none';
-            // Show the native install prompt
             if (deferredPrompt) {
                 deferredPrompt.prompt();
-                // Wait for the user to respond to the prompt
                 const { outcome } = await deferredPrompt.userChoice;
-                // We've used the prompt, throw it away
                 deferredPrompt = null;
             }
         });
 
-        // If they successfully install it, make sure the button stays hidden
         window.addEventListener('appinstalled', () => {
             installBtn.style.display = 'none';
         });
+
+        // --- IOS INSTALL LOGIC ---
+        const isIos = () => {
+            const userAgent = window.navigator.userAgent.toLowerCase();
+            return /iphone|ipad|ipod/.test(userAgent);
+        };
+        // Checks if the app is already running from the home screen
+        const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+        // If it's an iPhone AND it's not already installed, show the bubble
+        if (isIos() && !isInStandaloneMode()) {
+            document.getElementById('iosPrompt').style.display = 'block';
+            
+            // Optional: Hide the prompt after 10 seconds so it doesn't block their view forever
+            setTimeout(() => {
+                document.getElementById('iosPrompt').style.display = 'none';
+            }, 10000);
+        }
     </script>
 </body>
 </html>
