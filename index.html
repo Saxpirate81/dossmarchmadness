@@ -7,13 +7,12 @@
 
     <link rel="manifest" href="/manifest.json">
 
-<link rel="apple-touch-icon" href="/icon-512.png">
+    <link rel="apple-touch-icon" href="/icon-512.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Your App Name">
 
     <style>
-        /* Removes all margins so the app takes up the whole screen */
         body, html {
             margin: 0;
             padding: 0;
@@ -25,9 +24,63 @@
             height: 100%;
             border: none;
         }
+        
+        /* The Install Button Design */
+        #installBtn {
+            display: none; /* Hidden by default so it doesn't show on iOS or already-installed apps */
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            background-color: #000000; /* Change this to your brand color */
+            color: #ffffff;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 1000; /* Keeps it sitting on top of the iframe */
+        }
     </style>
 </head>
 <body>
-    <iframe src="https://script.google.com/macros/s/AKfycbwww0lxCNGZu2Ktubb0i6zluhAYDA4ROyjoQbqtiKcOrBcyaU90dmdA3-Nvs96Nvig7/exec"></iframe>
+    <iframe src="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"></iframe>
+
+    <button id="installBtn">Install App</button>
+
+    <script>
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+
+        // This event only fires on supported devices (mostly Android/Chrome)
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the default mini-infobar from appearing
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Un-hide our custom button
+            installBtn.style.display = 'block';
+        });
+
+        installBtn.addEventListener('click', async () => {
+            // Hide the button once clicked
+            installBtn.style.display = 'none';
+            // Show the native install prompt
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                // We've used the prompt, throw it away
+                deferredPrompt = null;
+            }
+        });
+
+        // If they successfully install it, make sure the button stays hidden
+        window.addEventListener('appinstalled', () => {
+            installBtn.style.display = 'none';
+        });
+    </script>
 </body>
 </html>
