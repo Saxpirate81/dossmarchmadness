@@ -1,6 +1,6 @@
 {
-  "name": "Your Full App Name",
-  "short_name": "App Name",
+  "name": "Doss Madness",
+  "short_name": "Doss March Madness",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
